@@ -1,0 +1,15 @@
+# 遍历av链接
+# 获取链接的弹幕评论
+  # `play.swf`(如无则找`bofqi`)附近的`xxid`如`cid`,`ykid`,`qid`,`rid`之类 不是`aid`
+  # 弹幕内容在`http://comment.bilibili.tv/{cid}.xml`中
+  * 这里是`src`中的`cid`, 弹幕xml地址为 `http://comment.bilibili.tv/184723.xml`
+  {{{
+ <div class="scontent" id="bofqi">
+    <iframe height="482" width="950" class="player" src="https://secure.bilibili.com/secure,cid=184723&aid=111000" scrolling="no" border="0" frameborder="no" framespacing="0" onload="window.securePlayerFrameLoaded=true"></iframe><img src="https://secure.bilibili.com/images/grey.gif" id="img_ErrCheck" style="display:none" /><script type="text/javascript" src="http://static.hdslb.com/js/page.player_error.js"></script>
+    </div>
+  }}}
+# 获取链接的分类 播放数 评论数 收藏数
+# 从评论中计算特定字符串如`真棒``喜欢``加油`等的比例
+# 将播放,评论,收藏以排名记分方式记分
+# 以分类,各特定字符串所占比例为输入,分数为输出 生成csv
+# 用golearn处理
