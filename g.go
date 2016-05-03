@@ -5,6 +5,7 @@ import (
 	"io/ioutil"
 	"net/http"
 	"os"
+	"regexp"
 	"strconv"
 
 	"golang.org/x/net/html"
@@ -31,6 +32,36 @@ func main() {
 	<-quitch
 }
 
+func Deal(ch chan string, ch2 chan string) {
+	for i := 0; i < 1; i++ {
+		go func() {
+			for {
+				url := <-ch
+				fmt.Println("get task:" + url)
+				s, _ := fetchBody(url)
+				//fmt.Println(s)
+				url2 := parseCommentUrl(s)
+				fmt.Println(url2)
+				//sl, _ := getComments(url)
+				//ch2 <- "save: " + strconv.Itoa(len(sl))
+				ch2 <- "save: " + strconv.Itoa(len(url2))
+			}
+		}()
+	}
+}
+
+func Save(ch chan string, quitch chan int, n int) {
+	for {
+		line := <-ch
+		fmt.Println(line)
+
+		n--
+		if n == 0 {
+			quitch <- -1
+		}
+	}
+}
+
 func fetchBody(url string) (string, error) {
 	fmt.Println("fetch: " + url)
 	resp, err := http.Get(url)
@@ -50,8 +81,13 @@ func fetchBody(url string) (string, error) {
 	return string(contents), nil
 }
 
-func parseCommentUrl(url string) string {
-	return url[:20]
+func parseCommentUrl(s string) string {
+	//fmt.Println(s)
+	//pattern := `<div(.*?)>`
+	pattern := `(?s)<div\sclass="scontent"\sid="bofqi">(.*?)</div>`
+	reg := regexp.MustCompile(pattern)
+	fmt.Printf("%q\n", reg.FindAllString(s, -1))
+	return s[:20]
 }
 
 func getComments(url string) ([]string, error) {
@@ -83,36 +119,6 @@ func getComments(url string) ([]string, error) {
 	forEachNode(doc, visitNode, nil)
 	fmt.Println(comments)
 	return comments, nil
-}
-
-func Deal(ch chan string, ch2 chan string) {
-	for i := 0; i < 1; i++ {
-		go func() {
-			for {
-				url := <-ch
-				fmt.Println("get task:" + url)
-				s, _ := fetchBody(url)
-				//fmt.Println(s)
-				url2 := parseCommentUrl(s)
-				fmt.Println(url2)
-				//sl, _ := getComments(url)
-				//ch2 <- "save: " + strconv.Itoa(len(sl))
-				ch2 <- "save: " + strconv.Itoa(len(url2))
-			}
-		}()
-	}
-}
-
-func Save(ch chan string, quitch chan int, n int) {
-	for {
-		line := <-ch
-		fmt.Println(line)
-
-		n--
-		if n == 0 {
-			quitch <- -1
-		}
-	}
 }
 
 // Copied from gopl.io/ch5/outline2.
