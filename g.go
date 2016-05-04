@@ -82,12 +82,15 @@ func fetchBody(url string) (string, error) {
 }
 
 func parseCommentUrl(s string) string {
-	//fmt.Println(s)
-	//pattern := `<div(.*?)>`
 	pattern := `(?s)<div\sclass="scontent"\sid="bofqi">(.*?)</div>`
 	reg := regexp.MustCompile(pattern)
-	fmt.Printf("%q\n", reg.FindAllString(s, -1))
-	return s[:20]
+	ss1 := reg.FindAllString(s, -1)
+	fmt.Printf("%q\n", ss1[0])
+	pattern2 := `[^a]id=(\d+)`
+	reg2 := regexp.MustCompile(pattern2)
+	ss2 := reg2.FindAllStringSubmatch(ss1[0], -1)
+	fmt.Printf("%q\n", ss2)
+	return ss2[0][1]
 }
 
 func getComments(url string) ([]string, error) {
