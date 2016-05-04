@@ -40,11 +40,11 @@ func Deal(ch chan string, ch2 chan string) {
 				fmt.Println("get task:" + url)
 				s, _ := fetchBody(url)
 				//fmt.Println(s)
-				url2 := parseCommentUrl(s)
-				fmt.Println(url2)
+				result := parseAv(s)
+				fmt.Println(result)
 				//sl, _ := getComments(url)
 				//ch2 <- "save: " + strconv.Itoa(len(sl))
-				ch2 <- "save: " + strconv.Itoa(len(url2))
+				ch2 <- "save: " + strconv.Itoa(len(result))
 			}
 		}()
 	}
@@ -81,16 +81,60 @@ func fetchBody(url string) (string, error) {
 	return string(contents), nil
 }
 
-func parseCommentUrl(s string) string {
-	pattern := `(?s)<div\sclass="scontent"\sid="bofqi">(.*?)</div>`
-	reg := regexp.MustCompile(pattern)
-	ss1 := reg.FindAllString(s, -1)
-	fmt.Printf("%q\n", ss1[0])
-	pattern2 := `[^a]id=(\d+)`
-	reg2 := regexp.MustCompile(pattern2)
-	ss2 := reg2.FindAllStringSubmatch(ss1[0], -1)
-	fmt.Printf("%q\n", ss2)
-	return ss2[0][1]
+func parseAv(s string) map[string]string {
+	var pattern string
+	var reg *regexp.Regexp
+	var ss, ss1 [][]string
+
+	// play,comm,coin,fav
+	pattern = `(?s)<div\sclass="v-title-info">(.*?)<div\sclass="upinfo">`
+	reg = regexp.MustCompile(pattern)
+	ss = reg.FindAllStringSubmatch(s, -1)
+	fmt.Printf("%q\n", ss[0][0])
+
+	pattern = `<span\sid="dianji">(\d*)</span>`
+	reg = regexp.MustCompile(pattern)
+	ss1 = reg.FindAllStringSubmatch(ss[0][0], -1)
+	fmt.Printf("%q\n", ss1)
+	play := ss1[0][1]
+
+	pattern = `<span\sid="dm_count">(\d*)</span>`
+	reg = regexp.MustCompile(pattern)
+	ss1 = reg.FindAllStringSubmatch(ss[0][0], -1)
+	fmt.Printf("%q\n", ss1)
+	comm := ss1[0][1]
+
+	pattern = `<span\sid="v_ctimes">(\d*)</span>`
+	reg = regexp.MustCompile(pattern)
+	ss1 = reg.FindAllStringSubmatch(ss[0][0], -1)
+	fmt.Printf("%q\n", ss1)
+	coin := ss1[0][1]
+
+	pattern = `<span\sid="stow_count">(\d*)</span>`
+	reg = regexp.MustCompile(pattern)
+	ss1 = reg.FindAllStringSubmatch(ss[0][0], -1)
+	fmt.Printf("%q\n", ss1)
+	fav := ss1[0][1]
+
+	// comment url
+	pattern = `(?s)<div\sclass="scontent"\sid="bofqi">(.*?)</div>`
+	reg = regexp.MustCompile(pattern)
+	ss = reg.FindAllStringSubmatch(s, -1)
+	fmt.Printf("%q\n", ss[0][0])
+	pattern = `[^a]id=(\d+)`
+	reg = regexp.MustCompile(pattern)
+	ss = reg.FindAllStringSubmatch(ss[0][0], -1)
+	fmt.Printf("%q\n", ss)
+	id := ss[0][1]
+	commurl := fmt.Sprintf("http://comment.bilibili.tv/%s.xml", id)
+
+	var result = map[string]string{}
+	result["url"] = commurl
+	result["play"] = play
+	result["comm"] = comm
+	result["coin"] = coin
+	result["fav"] = fav
+	return result
 }
 
 func getComments(url string) ([]string, error) {

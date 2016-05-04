@@ -9,9 +9,12 @@
     </div>
   }}}
 # 获取链接的分类 播放数 评论数 收藏数
+  * 用ajax链接获取: http://interface.bilibili.com/count?key=93ea6ac2064839da68f04fe1&nr=1&aid=111000&mid=115258&_=1462366299048
+  * cookie:`fts=1461547155; pgv_pvi=5518254080; sid=layop4b2; pgv_si=s4047251456; PLHistory=sSk%7Cox]S%; DedeID=111000`
 # 从评论中计算特定字符串如`真棒``喜欢``加油`等的比例
 # 将播放,评论,收藏以排名记分方式记分
 # 以分类,各特定字符串所占比例为输入,分数为输出 生成csv
 # 用golearn处理
 
 * 测试参数 111000 3
+
