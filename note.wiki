@@ -17,4 +17,8 @@
 # 用golearn处理
 
 * 测试参数 111000 3
+* 4523247 #带承包
+&{map[pages:2 created_at:2011-07-03 16:41 spid:<nil> favorites:5095 title:谷歌娘热唱电磁炮与小圆OP allow_feed:0 allow_download:1 tag:.COM娘与.J,ONLY,MY,コネクト,RAILGUN,谷音,谷歌娘,UTAU,新玩具发现 author:【存在抹消】 instant_server:chat.bilibili.com video_review:14783 play:498500 allow_bp:0 description:sm14579198 谷歌娘神美声哦~ 不要总说初音败了。。。。初音神PV→av112325 pic:http://i0.hdslb.com/user/1152/115258/13096824857083196f05ac2981.png mid:115258 coins:585 src:c arctype:Unknow list:map[1:map[part:コネクト cid:184724 page:2 type:sina] 0:map[cid:184723 page:1 type:sina part:only my railgun]] typename:UTAU review:795 face:http://i1.hdslb.com/bfs/face/3f4367de0a039d073135f21fa9b796768be6b83b.png created:1309682485 credit:11700 tid:57]}
+
+map[coin:"585" fav:"5095" play:"498500" comm:"795" danmu:"14783"]
 

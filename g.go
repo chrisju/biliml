@@ -1,6 +1,7 @@
 package main
 
 import (
+	j "encoding/json"
 	"fmt"
 	"io/ioutil"
 	"net/http"
@@ -9,6 +10,8 @@ import (
 	"strconv"
 
 	"golang.org/x/net/html"
+
+	. "github.com/WhiteBlue/bilibili-service/lib"
 )
 
 func main() {
@@ -17,34 +20,49 @@ func main() {
 	r, _ := strconv.Atoi(sr)
 	n, _ := strconv.Atoi(sn)
 
-	chr := make(chan string)   //任务
+	chr := make(chan int)      //任务
 	csvch := make(chan string) //结果 作为csv的一行
 	quitch := make(chan int)
 	go Deal(chr, csvch)
 	go Save(csvch, quitch, n)
 	for i := 0; i < n; i++ {
-		id := r - i
-		url := fmt.Sprintf("http://www.bilibili.tv/video/av%d/index.html", id)
-		fmt.Println("url:", url)
-		chr <- url
+		aid := r - i
+		chr <- aid
 	}
 
 	<-quitch
 }
 
-func Deal(ch chan string, ch2 chan string) {
+func Deal(ch chan int, ch2 chan string) {
+	client := NewBiliClient()
+	var b []byte
 	for i := 0; i < 1; i++ {
 		go func() {
 			for {
-				url := <-ch
-				fmt.Println("get task:" + url)
-				s, _ := fetchBody(url)
-				//fmt.Println(s)
-				result := parseAv(s)
-				fmt.Println(result)
+				aid := <-ch
+				p := map[string]string{}
+				json, _ := client.GetVideoInfo2(strconv.Itoa(aid))
+				fmt.Println(json)
+				b, _ = j.Marshal(json.Get("coins"))
+				p["coin"] = string(b)
+				b, _ = j.Marshal(json.Get("favorites"))
+				p["fav"] = string(b)
+				b, _ = j.Marshal(json.Get("play"))
+				p["play"] = string(b)
+				b, _ = j.Marshal(json.Get("review"))
+				p["comm"] = string(b)
+				b, _ = j.Marshal(json.Get("video_review"))
+				p["danmu"] = string(b)
+				//url := fmt.Sprintf("http://www.bilibili.tv/video/av%d/index.html", aid)
+				//fmt.Println("get task:" + url)
+				//s, _ := fetchBody(url)
+				////fmt.Println(s)
+				//result := parseAv(s)
+				//fmt.Println(result)
 				//sl, _ := getComments(url)
 				//ch2 <- "save: " + strconv.Itoa(len(sl))
-				ch2 <- "save: " + strconv.Itoa(len(result))
+				fmt.Println(p)
+				ch2 <- "save: " + strconv.Itoa(len(p))
 			}
 		}()
 	}
@@ -84,37 +102,37 @@ func fetchBody(url string) (string, error) {
 func parseAv(s string) map[string]string {
 	var pattern string
 	var reg *regexp.Regexp
-	var ss, ss1 [][]string
+	var ss [][]string
 
 	// play,comm,coin,fav
-	pattern = `(?s)<div\sclass="v-title-info">(.*?)<div\sclass="upinfo">`
-	reg = regexp.MustCompile(pattern)
-	ss = reg.FindAllStringSubmatch(s, -1)
-	fmt.Printf("%q\n", ss[0][0])
+	//pattern = `(?s)<div\sclass="v-title-info">(.*?)<div\sclass="upinfo">`
+	//reg = regexp.MustCompile(pattern)
+	//ss = reg.FindAllStringSubmatch(s, -1)
+	//fmt.Printf("%q\n", ss[0][0])
 
-	pattern = `<span\sid="dianji">(\d*)</span>`
-	reg = regexp.MustCompile(pattern)
-	ss1 = reg.FindAllStringSubmatch(ss[0][0], -1)
-	fmt.Printf("%q\n", ss1)
-	play := ss1[0][1]
+	//pattern = `<span\sid="dianji">(\d*)</span>`
+	//reg = regexp.MustCompile(pattern)
+	//ss1 = reg.FindAllStringSubmatch(ss[0][0], -1)
+	//fmt.Printf("%q\n", ss1)
+	//play := ss1[0][1]
 
-	pattern = `<span\sid="dm_count">(\d*)</span>`
-	reg = regexp.MustCompile(pattern)
-	ss1 = reg.FindAllStringSubmatch(ss[0][0], -1)
-	fmt.Printf("%q\n", ss1)
-	comm := ss1[0][1]
+	//pattern = `<span\sid="dm_count">(\d*)</span>`
+	//reg = regexp.MustCompile(pattern)
+	//ss1 = reg.FindAllStringSubmatch(ss[0][0], -1)
+	//fmt.Printf("%q\n", ss1)
+	//comm := ss1[0][1]
 
-	pattern = `<span\sid="v_ctimes">(\d*)</span>`
-	reg = regexp.MustCompile(pattern)
-	ss1 = reg.FindAllStringSubmatch(ss[0][0], -1)
-	fmt.Printf("%q\n", ss1)
-	coin := ss1[0][1]
+	//pattern = `<span\sid="v_ctimes">(\d*)</span>`
+	//reg = regexp.MustCompile(pattern)
+	//ss1 = reg.FindAllStringSubmatch(ss[0][0], -1)
+	//fmt.Printf("%q\n", ss1)
+	//coin := ss1[0][1]
 
-	pattern = `<span\sid="stow_count">(\d*)</span>`
-	reg = regexp.MustCompile(pattern)
-	ss1 = reg.FindAllStringSubmatch(ss[0][0], -1)
-	fmt.Printf("%q\n", ss1)
-	fav := ss1[0][1]
+	//pattern = `<span\sid="stow_count">(\d*)</span>`
+	//reg = regexp.MustCompile(pattern)
+	//ss1 = reg.FindAllStringSubmatch(ss[0][0], -1)
+	//fmt.Printf("%q\n", ss1)
+	//fav := ss1[0][1]
 
 	// comment url
 	pattern = `(?s)<div\sclass="scontent"\sid="bofqi">(.*?)</div>`
@@ -130,10 +148,10 @@ func parseAv(s string) map[string]string {
 
 	var result = map[string]string{}
 	result["url"] = commurl
-	result["play"] = play
-	result["comm"] = comm
-	result["coin"] = coin
-	result["fav"] = fav
+	//result["play"] = play
+	//result["comm"] = comm
+	//result["coin"] = coin
+	//result["fav"] = fav
 	return result
 }
 
