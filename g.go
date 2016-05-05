@@ -8,6 +8,7 @@ import (
 	"os"
 	"regexp"
 	"strconv"
+	"strings"
 
 	"golang.org/x/net/html"
 
@@ -24,7 +25,7 @@ func main() {
 	csvch := make(chan string) //结果 作为csv的一行
 	quitch := make(chan int)
 	go Deal(chr, csvch)
-	go Save(csvch, quitch, n)
+	go Save(csvch, quitch, n+1)
 	for i := 0; i < n; i++ {
 		aid := r - i
 		chr <- aid
@@ -36,6 +37,7 @@ func main() {
 func Deal(ch chan int, ch2 chan string) {
 	client := NewBiliClient()
 	var b []byte
+	ch2 <- "play,comments,danmu,favorites,coins"
 	for i := 0; i < 1; i++ {
 		go func() {
 			for {
@@ -44,15 +46,15 @@ func Deal(ch chan int, ch2 chan string) {
 				json, _ := client.GetVideoInfo2(strconv.Itoa(aid))
 				fmt.Println(json)
 				b, _ = j.Marshal(json.Get("coins"))
-				p["coin"] = string(b)
+				p["coin"] = strings.Trim(string(b), "\"")
 				b, _ = j.Marshal(json.Get("favorites"))
-				p["fav"] = string(b)
+				p["fav"] = strings.Trim(string(b), "\"")
 				b, _ = j.Marshal(json.Get("play"))
-				p["play"] = string(b)
+				p["play"] = strings.Trim(string(b), "\"")
 				b, _ = j.Marshal(json.Get("review"))
-				p["comm"] = string(b)
+				p["comm"] = strings.Trim(string(b), "\"")
 				b, _ = j.Marshal(json.Get("video_review"))
-				p["danmu"] = string(b)
+				p["danmu"] = strings.Trim(string(b), "\"")
 				//url := fmt.Sprintf("http://www.bilibili.tv/video/av%d/index.html", aid)
 				//fmt.Println("get task:" + url)
 				//s, _ := fetchBody(url)
@@ -62,7 +64,8 @@ func Deal(ch chan int, ch2 chan string) {
 				//sl, _ := getComments(url)
 				//ch2 <- "save: " + strconv.Itoa(len(sl))
 				fmt.Println(p)
-				ch2 <- "save: " + strconv.Itoa(len(p))
+				line := p["play"] + "," + p["comm"] + "," + p["danmu"] + "," + p["fav"] + "," + p["coin"]
+				ch2 <- line
 			}
 		}()
 	}
