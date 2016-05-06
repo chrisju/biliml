@@ -43,7 +43,12 @@ func Deal(ch chan int, ch2 chan string) {
 			for {
 				aid := <-ch
 				p := map[string]string{}
-				json, _ := client.GetVideoInfo2(strconv.Itoa(aid))
+				json, err := client.GetVideoInfo2(strconv.Itoa(aid))
+				if err != nil {
+					fmt.Println(err)
+					ch2 <- ""
+					continue
+				}
 				fmt.Println(json)
 				b, _ = j.Marshal(json.Get("coins"))
 				p["coin"] = strings.Trim(string(b), "\"")
@@ -77,9 +82,11 @@ func Save(ch chan string, quitch chan int, n int) {
 	defer f.Close()
 	for {
 		line := <-ch
-		fmt.Println(line)
-		_, err := f.Write([]byte(line + "\n"))
-		check(err)
+		if line != "" {
+			fmt.Println(line)
+			_, err := f.Write([]byte(line + "\n"))
+			check(err)
+		}
 
 		n--
 		if n == 0 {
