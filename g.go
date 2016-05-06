@@ -72,14 +72,25 @@ func Deal(ch chan int, ch2 chan string) {
 }
 
 func Save(ch chan string, quitch chan int, n int) {
+	f, err := os.Create("data.csv")
+	check(err)
+	defer f.Close()
 	for {
 		line := <-ch
 		fmt.Println(line)
+		_, err := f.Write([]byte(line + "\n"))
+		check(err)
 
 		n--
 		if n == 0 {
 			quitch <- -1
 		}
+	}
+}
+
+func check(e error) {
+	if e != nil {
+		panic(e)
 	}
 }
 
