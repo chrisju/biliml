@@ -9,6 +9,7 @@ import (
 	"regexp"
 	"strconv"
 	"strings"
+	"time"
 
 	"golang.org/x/net/html"
 
@@ -44,6 +45,7 @@ func Deal(ch chan int, ch2 chan string) {
 				aid := <-ch
 				p := map[string]string{}
 				json, err := client.GetVideoInfo2(strconv.Itoa(aid))
+				time.Sleep(1 * time.Second)
 				if err != nil {
 					fmt.Println(err)
 					ch2 <- ""
