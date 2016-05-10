@@ -15,15 +15,14 @@ func errexit(err error) {
 }
 
 func main() {
-	rawData, err := base.ParseCSVToInstances("data2.csv", true)
+	trainData1, err := base.ParseCSVToInstances("datatrain1.csv", true)
+	errexit(err)
+	testData, err := base.ParseCSVToInstances("data1.csv", true)
 	errexit(err)
 
 	lr := NewLinearRegression()
 
-	//Do a training-test split
-	trainData, testData := base.InstancesTrainTestSplit(rawData, 0.60)
-
-	err1 := lr.Fit(trainData)
+	err1 := lr.Fit(trainData1)
 	errexit(err1)
 
 	predictions, err2 := lr.Predict(testData)
@@ -44,7 +43,7 @@ func main() {
 		if expectedValue < 0 {
 			expectedValue = 0
 		}
-		if expectedValue > 200 || actualValue > 200 {
+		if expectedValue > 20 || actualValue > 20 {
 			d := expectedValue / actualValue
 			if d > 1 {
 				d = 1 / d
