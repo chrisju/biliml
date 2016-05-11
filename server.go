@@ -7,12 +7,23 @@ import (
 	"os"
 	"strconv"
 	"sync"
+
+	"github.com/sjwhitworth/golearn/base"
+	. "github.com/sjwhitworth/golearn/linear_models"
 )
 
 var mu sync.Mutex
 var count int
+var lr *LinearRegression
 
 func main() {
+	trainData1, err := base.ParseCSVToInstances("datatrain1.csv", true)
+	errexit(err)
+	lr = NewLinearRegression()
+	err1 := lr.Fit(trainData1)
+	errexit(err1)
+
+	fmt.Println("start listening at 0.0.0.0:2233...")
 	http.HandleFunc("/", handler2)
 	http.HandleFunc("/count", counter)
 	log.Fatal(http.ListenAndServe("0.0.0.0:2233", nil))
@@ -74,15 +85,26 @@ func handler2(w http.ResponseWriter, r *http.Request) {
 			//fmt.Fprintf(w, "Form[%s] = %s\n", k, v)
 		}
 	}
-	if play != "" && comm != "" && danmu != "" && fav != "" {
+	if aid != "" || (play != "" && comm != "" && danmu != "" && fav != "") {
 		dealed = true
 	}
 	if !dealed {
 		fmt.Fprintf(w, "wrong request!")
 	} else {
-		fmt.Fprintf(w, "aid: %s play: %s\n", aid, play)
-		s := fmt.Sprintf("%s%s,%s,%s,%s,%s", title, play, comm, danmu, fav, "1")
-		Save(strconv.Itoa(count)+".csv", s)
+		s := fmt.Sprintf("%s%s,%s,%s,%s,%s\n", title, play, comm, danmu, fav, "1")
+		fname := "t/" + strconv.Itoa(count) + ".csv"
+		Save(fname, s)
+
+		fmt.Fprintf(w, s)
+
+		mu.Lock()
+		testData, err := base.ParseCSVToInstances(fname, true)
+		errexit(err)
+		predictions, err2 := lr.Predict(testData)
+		errexit(err2)
+		expectedValue, _ := strconv.ParseFloat(base.GetClass(predictions, 0), 64)
+		mu.Unlock()
+		fmt.Fprintf(w, fmt.Sprintf("expected value: %v", expectedValue))
 	}
 }
 
@@ -90,11 +112,17 @@ func Save(fname string, s string) {
 	f, err := os.Create(fname)
 	check(err)
 	defer f.Close()
-	_, err := f.Write([]byte(s))
+	_, err = f.Write([]byte(s))
 	check(err)
 }
 func check(e error) {
 	if e != nil {
 		panic(e)
+	}
+}
+
+func errexit(err error) {
+	if err != nil {
+		panic(err)
 	}
 }
