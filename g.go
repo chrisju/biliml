@@ -1,7 +1,6 @@
 package main
 
 import (
-	j "encoding/json"
 	"fmt"
 	"io/ioutil"
 	"net/http"
@@ -13,8 +12,34 @@ import (
 
 	"golang.org/x/net/html"
 
-	. "github.com/WhiteBlue/bilibili-service/lib"
+	"github.com/chrisju/bilibili-service/lib"
 )
+
+type MyBClient struct {
+	*lib.BClient
+}
+
+func NewClient() *MyBClient {
+	return &MyBClient{lib.NewClient()}
+}
+
+//取得视频详细信息
+func (this *MyBClient) GetVideoInfo2(aid int) (*lib.JSON, error) {
+	params := map[string][]string{
+		"appver":     {"2310"},
+		"build":      {"2310"},
+		"batch":      {"1"},
+		"check_area": {"1"},
+		"id":         {strconv.Itoa(aid)},
+		"platform":   {"ios"},
+		"type":       {"json"},
+	}
+	json, err := this.Get("http://api.bilibili.com/view", params)
+	if err != nil {
+		return nil, err
+	}
+	return json, nil
+}
 
 func main() {
 	sr := os.Args[1]
@@ -34,17 +59,16 @@ func main() {
 
 	<-quitch
 }
-
 func Deal(ch chan int, ch2 chan string) {
-	client := NewBiliClient()
-	var b []byte
+	client := NewClient()
+	var b string
 	ch2 <- "play,comments,danmu,favorites,coins"
 	for i := 0; i < 1; i++ {
 		go func() {
 			for {
 				aid := <-ch
 				p := map[string]string{}
-				json, err := client.GetVideoInfo2(strconv.Itoa(aid))
+				json, err := client.GetVideoInfo2(aid)
 				time.Sleep(1 * time.Second)
 				if err != nil {
 					fmt.Println(err)
@@ -52,15 +76,15 @@ func Deal(ch chan int, ch2 chan string) {
 					continue
 				}
 				fmt.Println(json)
-				b, _ = j.Marshal(json.Get("coins"))
+				b, _ = json.Get("coins").String()
 				p["coin"] = strings.Trim(string(b), "\"")
-				b, _ = j.Marshal(json.Get("favorites"))
+				b, _ = json.Get("favorites").String()
 				p["fav"] = strings.Trim(string(b), "\"")
-				b, _ = j.Marshal(json.Get("play"))
+				b, _ = json.Get("play").String()
 				p["play"] = strings.Trim(string(b), "\"")
-				b, _ = j.Marshal(json.Get("review"))
+				b, _ = json.Get("review").String()
 				p["comm"] = strings.Trim(string(b), "\"")
-				b, _ = j.Marshal(json.Get("video_review"))
+				b, _ = json.Get("video_review").String()
 				p["danmu"] = strings.Trim(string(b), "\"")
 				//url := fmt.Sprintf("http://www.bilibili.tv/video/av%d/index.html", aid)
 				//fmt.Println("get task:" + url)
